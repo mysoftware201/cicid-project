@@ -6,7 +6,7 @@ pipeline {
         MVN_HOME = 'C:\\Program Files\\apache-maven-3.9.12'
         TOMCAT_PATH = 'C:\\Program Files\\Apache Software Foundation\\Tomcat 10.1'
         APP_NAME = 'HOOT'
-        APP_URL = 'http://localhost:8080/HOOT/' // URL to check if app is up
+        TOMCAT_PORT = 8080  // check this port for readiness
     }
 
     stages {
@@ -55,32 +55,30 @@ pipeline {
                 bat "copy \"target\\${APP_NAME}.war\" \"${TOMCAT_PATH}\\webapps\\${APP_NAME}.war\""
 
                 echo "Starting Tomcat (non-blocking)..."
-                // 🔹 Non-blocking Windows start
                 bat "start \"Tomcat\" \"${TOMCAT_PATH}\\bin\\startup.bat\""
 
-                echo "Waiting for application to be ready..."
-                // wait until app URL responds
+                echo "Waiting for Tomcat port ${TOMCAT_PORT} to be open..."
                 script {
                     def maxRetries = 30
                     def waitTime = 5
-                    def appUp = false
+                    def portOpen = false
+
                     for (int i = 0; i < maxRetries; i++) {
                         try {
-                            def response = powershell(returnStdout: true, script: "try { Invoke-WebRequest -Uri '${APP_URL}' -UseBasicParsing -TimeoutSec 5; 'OK' } catch { 'FAIL' }").trim()
-                            if (response == 'OK') {
-                                appUp = true
-                                break
-                            }
+                            def socket = new Socket("localhost", TOMCAT_PORT)
+                            socket.close()
+                            portOpen = true
+                            break
                         } catch (err) {
-                            // ignore
+                            echo "Waiting for Tomcat port ${TOMCAT_PORT} to open... (${i+1}/${maxRetries})"
                         }
-                        echo "Waiting for app to start... (${i+1}/${maxRetries})"
                         sleep waitTime
                     }
-                    if (!appUp) {
-                        error "Application did not start in expected time!"
+
+                    if (!portOpen) {
+                        error "Tomcat did not start in expected time!"
                     } else {
-                        echo "Application is up and running! ✅"
+                        echo "Tomcat is up and running! ✅"
                     }
                 }
             }
