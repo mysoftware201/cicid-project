@@ -7,28 +7,30 @@ on:
 
 jobs:
   build-deploy:
-    runs-on: windows-latest
+    runs-on: self-hosted
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Set up JDK 17
-      uses: actions/setup-java@v3
-      with:
-        java-version: '17'
-        distribution: 'temurin'
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
 
-    - name: Build WAR with Maven
-      run: mvn clean package
+      - name: Build WAR
+        run: mvnw clean package
 
-#    - name: Deploy to Windows Tomcat
-#      shell: powershell
-#      run: |
-#        $TomcatPath = "C:\Program Files\Apache Software Foundation\Tomcat 10.1"  # Tomcat installation path
-#        Remove-Item -Recurse -Force "$TomcatPath\webapps\HOOT"
-#        Remove-Item -Force "$TomcatPath\webapps\HOOT.war"
-#        Copy-Item -Path "target\HOOT.war" -Destination "$TomcatPath\webapps\HOOT.war"
-#        & "$TomcatPath\bin\shutdown.bat"
-#        Start-Sleep -Seconds 5
-#        & "$TomcatPath\bin\startup.bat"
+      - name: Deploy to Tomcat 10.1
+        shell: powershell
+        run: |
+          $TomcatPath = "C:\Program Files\Apache Software Foundation\Tomcat 10.1"
+
+          & "$TomcatPath\bin\shutdown.bat"
+          Start-Sleep -Seconds 5
+
+          Remove-Item "$TomcatPath\webapps\HOOT*" -Recurse -Force -ErrorAction SilentlyContinue
+          Copy-Item "target\HOOT.war" "$TomcatPath\webapps\HOOT.war"
+
+          & "$TomcatPath\bin\startup.bat"
