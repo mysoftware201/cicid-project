@@ -1,4 +1,4 @@
-pipeline {
+pipeline { 
     agent any
 
     environment {
@@ -41,10 +41,14 @@ pipeline {
                 sleep 5
 
                 echo "Backing up old WAR..."
-                bat "if exist \"${TOMCAT_PATH}\\webapps\\${APP_NAME}.war\" copy \"${TOMCAT_PATH}\\webapps\\${APP_NAME}.war\" \"${TOMCAT_PATH}\\webapps\\${APP_NAME}_backup_%DATE:~-4%%DATE:~4,2%%DATE:~7,2%.war\""
+                script {
+                    // timestamp safe for Windows
+                    def timestamp = new Date().format("yyyyMMdd_HHmmss")
+                    bat "if exist \"${TOMCAT_PATH}\\webapps\\${APP_NAME}.war\" copy \"${TOMCAT_PATH}\\webapps\\${APP_NAME}.war\" \"${TOMCAT_PATH}\\webapps\\${APP_NAME}_backup_${timestamp}.war\""
+                }
 
                 echo "Deleting old app..."
-                bat "if exist \"${TOMCAT_PATH}\\webapps\\${APP_NAME}*\" rmdir /s /q \"${TOMCAT_PATH}\\webapps\\${APP_NAME}\""
+                bat "if exist \"${TOMCAT_PATH}\\webapps\\${APP_NAME}\" rmdir /s /q \"${TOMCAT_PATH}\\webapps\\${APP_NAME}\""
                 bat "if exist \"${TOMCAT_PATH}\\webapps\\${APP_NAME}.war\" del /q \"${TOMCAT_PATH}\\webapps\\${APP_NAME}.war\""
 
                 echo "Deploying new WAR..."
