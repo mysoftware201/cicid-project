@@ -54,8 +54,9 @@ pipeline {
                 echo "Deploying new WAR..."
                 bat "copy \"target\\${APP_NAME}.war\" \"${TOMCAT_PATH}\\webapps\\${APP_NAME}.war\""
 
-                echo "Starting Tomcat..."
-                bat "\"${TOMCAT_PATH}\\bin\\startup.bat\""
+                echo "Starting Tomcat (non-blocking)..."
+                // 🔹 Non-blocking Windows start
+                bat "start \"Tomcat\" \"${TOMCAT_PATH}\\bin\\startup.bat\""
 
                 echo "Waiting for application to be ready..."
                 // wait until app URL responds
