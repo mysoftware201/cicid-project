@@ -18,14 +18,14 @@ pipeline {
         stage('Build') {
             steps {
                 echo "Building WAR..."
-                bat "\"${MVN_HOME}\\bin\\mvn\" clean package -DskipTests"
+                bat "\"${MVN_HOME}\\bin\\mvnd\" clean package -DskipTests"
             }
         }
 
         stage('Test') {
             steps {
                 echo "Running Tests..."
-                bat "\"${MVN_HOME}\\bin\\mvn\" test"
+                bat "\"${MVN_HOME}\\bin\\mvnd\" test"
             }
             post {
                 always {
