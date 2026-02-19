@@ -22,13 +22,13 @@ jobs:
     - name: Build WAR with Maven
       run: mvn clean package
 
-    - name: Deploy to Windows Tomcat
-      shell: powershell
-      run: |
-        $TomcatPath = "C:\Program Files\Apache Software Foundation\Tomcat 10.1"  # Tomcat installation path
-        Remove-Item -Recurse -Force "$TomcatPath\webapps\HOOT"
-        Remove-Item -Force "$TomcatPath\webapps\HOOT.war"
-        Copy-Item -Path "target\HOOT.war" -Destination "$TomcatPath\webapps\HOOT.war"
-        & "$TomcatPath\bin\shutdown.bat"
-        Start-Sleep -Seconds 5
-        & "$TomcatPath\bin\startup.bat"
+#    - name: Deploy to Windows Tomcat
+#      shell: powershell
+#      run: |
+#        $TomcatPath = "C:\Program Files\Apache Software Foundation\Tomcat 10.1"  # Tomcat installation path
+#        Remove-Item -Recurse -Force "$TomcatPath\webapps\HOOT"
+#        Remove-Item -Force "$TomcatPath\webapps\HOOT.war"
+#        Copy-Item -Path "target\HOOT.war" -Destination "$TomcatPath\webapps\HOOT.war"
+#        & "$TomcatPath\bin\shutdown.bat"
+#        Start-Sleep -Seconds 5
+#        & "$TomcatPath\bin\startup.bat"
