@@ -8,7 +8,7 @@ public class TestController {
 
     @GetMapping("/")
     public String home() {
-        return "Tomcat deployment working !!! test";
+        return "Tomcat deployment working !!! test test";
     }
 }
 
