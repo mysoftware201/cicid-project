@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         JAVA_HOME = 'C:\\Program Files\\Java\\jdk-17'
-        MVN_HOME = 'C:\\maven-mvnd-1.0.3-windows-amd64'
+        MVN_HOME = 'C:\\Program Files\\apache-maven-3.9.12'
         TOMCAT_PATH = 'C:\\Program Files\\Apache Software Foundation\\Tomcat 10.1'
         APP_NAME = 'HOOT'
     }
@@ -18,14 +18,14 @@ pipeline {
         stage('Build') {
             steps {
                 echo "Building WAR..."
-                bat "\"${MVN_HOME}\\bin\\mvnd\" clean package -DskipTests"
+                bat "\"${MVN_HOME}\\bin\\mvn\" clean package -DskipTests"
             }
         }
 
         stage('Test') {
             steps {
                 echo "Running Tests..."
-                bat "\"${MVN_HOME}\\bin\\mvnd\" test"
+                bat "\"${MVN_HOME}\\bin\\mvn\" test"
             }
             post {
                 always {
