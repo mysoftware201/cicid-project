@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         JAVA_HOME = 'C:\\Program Files\\Java\\jdk-17'
-        MVN_HOME = 'C:\\apache-maven-3.9.3'
+        MVN_HOME = 'C:\\maven-mvnd-1.0.3-windows-amd64'
         TOMCAT_PATH = 'C:\\Program Files\\Apache Software Foundation\\Tomcat 10.1'
         APP_NAME = 'HOOT'
     }
