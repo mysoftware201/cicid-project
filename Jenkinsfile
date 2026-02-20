@@ -24,8 +24,8 @@ pipeline {
                 echo "Stopping existing container (if any)..."
                 bat "docker rm -f hoot-container || echo 'No existing container to remove'"
 
-                echo "Running new container..."
-                bat "docker run -d --name hoot-container -p 8080:8080 ${DOCKER_IMAGE}"
+                echo "Running new container on 9090..."
+                bat "docker run -d --name hoot-container -p 9090:8080 ${DOCKER_IMAGE}"
 
                 echo "Waiting for application to be ready..."
                 script {
