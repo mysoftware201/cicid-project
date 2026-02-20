@@ -4,7 +4,7 @@ pipeline {
     environment {
         DOCKER_IMAGE = "hoot-app:latest"
         APP_NAME = 'HOOT'
-        APP_URL = 'http://localhost:8080/HOOT/' // URL to check if app is up
+        APP_URL = 'http://localhost:9090/HOOT/' // URL to check if app is up
     }
 
     stages {
