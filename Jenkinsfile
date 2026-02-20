@@ -4,7 +4,7 @@ pipeline {
     environment {
         DOCKER_IMAGE = "hoot-app:latest"
         APP_NAME = 'HOOT'
-        APP_URL = 'http://localhost:9090/HOOT/' // URL to check if app is up
+        APP_URL = 'http://localhost:8082/HOOT/' // URL to check if app is up
     }
 
     stages {
@@ -24,8 +24,8 @@ pipeline {
                 echo "Stopping existing container (if any)..."
                 bat "docker rm -f hoot-container || echo 'No existing container to remove'"
 
-                echo "Running new container on 9090..."
-                bat "docker run -d --name hoot-container -p 9090:8080 ${DOCKER_IMAGE}"
+                echo "Running new container on 8082..."
+                bat "docker run -d --name hoot-container -p 8082:8080 ${DOCKER_IMAGE}"
 
                 echo "Waiting for application to be ready..."
                 script {
