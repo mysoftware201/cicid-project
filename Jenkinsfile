@@ -1,14 +1,11 @@
-pipeline {
+pipeline { 
     agent any
 
     environment {
-        DOCKER_IMAGE = "hoot-app:latest"
+        JAVA_HOME = 'C:\\Program Files\\Java\\jdk-17'
+        MVN_HOME = 'C:\\Program Files\\apache-maven-3.9.12'
+        TOMCAT_PATH = 'C:\\Program Files\\Apache Software Foundation\\Tomcat 10.1'
         APP_NAME = 'HOOT'
-        APP_PORT = 9090                    // Host port for Docker
-        CONTAINER_PORT = 8080              // Container's internal port
-        APP_URL = "http://localhost:9090/HOOT/"
-        MAX_RETRIES = 30                   // Integer, no quotes
-        WAIT_TIME = 5                      // Integer, no quotes
     }
 
     stages {
@@ -18,50 +15,49 @@ pipeline {
             }
         }
 
-        stage('Docker Build & Deploy') {
+        stage('Build') {
             steps {
-                echo "Building Docker image with WAR..."
-                bat "docker build -t ${DOCKER_IMAGE} ."
+                echo "Building WAR..."
+                bat "\"${MVN_HOME}\\bin\\mvn\" clean package -DskipTests"
+            }
+        }
 
-                echo "Stopping existing container (if any)..."
-                bat "docker rm -f hoot-container || echo 'No existing container to remove'"
-
-                echo "Running new container on port ${APP_PORT}..."
-                bat "docker run -d --name hoot-container -p ${APP_PORT}:${CONTAINER_PORT} ${DOCKER_IMAGE}"
-
-                echo "Waiting for application to be ready..."
-                script {
-                    def maxRetries = env.MAX_RETRIES.toInteger()
-                    def waitTime = env.WAIT_TIME.toInteger()
-                    def appUp = false
-
-                    for (int i = 0; i < maxRetries; i++) {
-                        try {
-                            def response = powershell(returnStdout: true, script: """
-                                try { 
-                                    Invoke-WebRequest -Uri '${APP_URL}' -UseBasicParsing -TimeoutSec 5
-                                    'OK'
-                                } catch { 'FAIL' }
-                            """).trim()
-
-                            if (response == 'OK') {
-                                appUp = true
-                                break
-                            }
-                        } catch (err) {
-                            // ignore errors during retries
-                        }
-
-                        echo "Waiting for app to start... (${i+1}/${maxRetries})"
-                        sleep waitTime
-                    }
-
-                    if (!appUp) {
-                        error "Application did not start in expected time!"
-                    } else {
-                        echo "Application is up and running! ✅"
-                    }
+        stage('Test') {
+            steps {
+                echo "Running Tests..."
+                bat "\"${MVN_HOME}\\bin\\mvn\" test"
+            }
+            post {
+                always {
+                    junit '**\\target\\surefire-reports\\*.xml'
                 }
+            }
+        }
+
+        stage('Deploy to Tomcat') {
+            steps {
+                echo "Stopping Tomcat..."
+                bat "\"${TOMCAT_PATH}\\bin\\shutdown.bat\""
+                sleep 10  // wait to fully stop Tomcat
+
+                echo "Backing up old WAR..."
+                script {
+                    def timestamp = new Date().format("yyyyMMdd_HHmmss")
+                    bat "if exist \"${TOMCAT_PATH}\\webapps\\${APP_NAME}.war\" copy \"${TOMCAT_PATH}\\webapps\\${APP_NAME}.war\" \"${TOMCAT_PATH}\\webapps\\${APP_NAME}_backup_${timestamp}.war\""
+                }
+
+                echo "Deleting old app..."
+                bat "if exist \"${TOMCAT_PATH}\\webapps\\${APP_NAME}\" rmdir /s /q \"${TOMCAT_PATH}\\webapps\\${APP_NAME}\""
+                bat "if exist \"${TOMCAT_PATH}\\webapps\\${APP_NAME}.war\" del /q \"${TOMCAT_PATH}\\webapps\\${APP_NAME}.war\""
+
+                echo "Deploying new WAR..."
+                bat "copy \"target\\${APP_NAME}.war\" \"${TOMCAT_PATH}\\webapps\\${APP_NAME}.war\""
+
+                echo "Starting Tomcat in background..."
+                // Start Tomcat in background, non-blocking
+                bat "start \"Tomcat\" \"${TOMCAT_PATH}\\bin\\startup.bat\""
+
+                echo "Deploy stage completed. Tomcat is running in background. ✅"
             }
         }
     }
