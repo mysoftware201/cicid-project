@@ -29,7 +29,7 @@ pipeline {
 
                 echo "Waiting for application to be ready..."
                 script {
-                    def maxRetries = 30
+                    def maxRetries = 3
                     def waitTime = 5
                     def appUp = false
                     for (int i = 0; i < maxRetries; i++) {
