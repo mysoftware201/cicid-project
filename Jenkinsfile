@@ -3,52 +3,58 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = "hoot-app:latest"
-        APP_NAME = 'HOOT'
-        APP_URL = 'http://localhost:8082/HOOT/' // URL to check if app is up
+        CONTAINER_NAME = "hoot-container"
+        HOST_PORT = 8082          // host वर कुठे run करायचं
+        CONTAINER_PORT = 8080     // container मध्ये app port
+        APP_URL = "http://localhost:8082/HOOT/" // host वर access URL
+        MAX_RETRIES = 30
+        WAIT_TIME = 5             // seconds
     }
 
     stages {
         stage('Checkout') {
             steps {
+                echo "Checking out code..."
                 git branch: 'master', url: 'https://github.com/mysoftware201/cicid-project.git'
             }
         }
 
         stage('Docker Build & Deploy') {
             steps {
-                echo "Building Docker image with WAR..."
-                
-                // Build Docker image using Dockerfile in project root
+                echo "Building Docker image..."
                 bat "docker build -t ${DOCKER_IMAGE} ."
 
                 echo "Stopping existing container (if any)..."
-                bat "docker rm -f hoot-container || echo 'No existing container to remove'"
+                bat "docker rm -f ${CONTAINER_NAME} || echo 'No existing container to remove'"
 
-                echo "Running new container on 8082..."
-                bat "docker run -d --name hoot-container -p 8082:8080 ${DOCKER_IMAGE}"
+                echo "Running new container on host port ${HOST_PORT}..."
+                bat "docker run -d --name ${CONTAINER_NAME} -p ${HOST_PORT}:${CONTAINER_PORT} ${DOCKER_IMAGE}"
 
                 echo "Waiting for application to be ready..."
                 script {
-                    def maxRetries = 3
-                    def waitTime = 5
                     def appUp = false
-                    for (int i = 0; i < maxRetries; i++) {
+                    for (int i = 1; i <= MAX_RETRIES; i++) {
                         try {
-                            def response = powershell(returnStdout: true, script: "try { Invoke-WebRequest -Uri '${APP_URL}' -UseBasicParsing -TimeoutSec 5; 'OK' } catch { 'FAIL' }").trim()
+                            def response = powershell(
+                                returnStdout: true, 
+                                script: "try { Invoke-WebRequest -Uri '${APP_URL}' -UseBasicParsing -TimeoutSec 5; 'OK' } catch { 'FAIL' }"
+                            ).trim()
+
                             if (response == 'OK') {
                                 appUp = true
+                                echo "Application is up and running! ✅"
                                 break
                             }
                         } catch (err) {
-                            // ignore
+                            // ignore exceptions
                         }
-                        echo "Waiting for app to start... (${i+1}/${maxRetries})"
-                        sleep waitTime
+
+                        echo "Waiting for app to start... (${i}/${MAX_RETRIES})"
+                        sleep WAIT_TIME
                     }
+
                     if (!appUp) {
-                        error "Application did not start in expected time!"
-                    } else {
-                        echo "Application is up and running! ✅"
+                        error "Application did not start in expected time! ❌"
                     }
                 }
             }
@@ -57,10 +63,10 @@ pipeline {
 
     post {
         success {
-            echo 'Pipeline completed successfully! 🎉'
+            echo "Pipeline completed successfully! 🎉"
         }
         failure {
-            echo 'Pipeline failed! ❌'
+            echo "Pipeline failed! ❌"
         }
     }
 }
